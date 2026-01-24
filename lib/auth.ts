@@ -5,6 +5,7 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import dotenv from "dotenv";
+import { Database } from "lucide-react";
 
 dotenv.config();
 
@@ -24,6 +25,9 @@ export const auth = betterAuth({
             enabled : true,
             maxAge : 60,
         }
+    },
+    rateLimit : {
+        enabled : true,
     },
     socialProviders: {
         github: {
