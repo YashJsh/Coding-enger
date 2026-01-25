@@ -75,3 +75,70 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model Problem {
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  difficulty  Difficulty
+  statement   String
+  constraints String
+  tags        String[]
+  testCases   TestCase[]
+  submission  Submission[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([difficulty])
+}
+
+model TestCase {
+  id        String @id @default(cuid())
+  problemId String
+  input     String
+  output    String
+  isSample  Boolean @default(false)
+
+  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  @@index([problemId])
+}
+
+enum Difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+model Submission {
+  id         String   @id @default(cuid())
+
+  userId     String   // from Better Auth
+  problemId  String
+
+  code       String
+  language   Language
+  status     SubmissionStatus
+
+  runtimeMs  Int?
+  memoryKb   Int?
+
+  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId, problemId])
+  @@index([problemId])
+}
+
+enum SubmissionStatus {
+  ACCEPTED
+  WRONG_ANSWER
+  TIME_LIMIT
+  RUNTIME_ERROR
+}
+
+enum Language {
+  JAVASCRIPT
+}
