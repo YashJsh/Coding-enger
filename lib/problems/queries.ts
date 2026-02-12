@@ -11,3 +11,12 @@ export async function getProblems() {
   })
   return problems;
 }
+
+export async function getProblemBySlug(slug : string){
+  const problem = await prisma.problem.findUnique({
+    where : {
+      slug : slug
+    }
+  });
+  return problem;
+}

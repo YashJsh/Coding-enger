@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { Difficulty } from "../generated/prisma/browser";
 
 /**
  * Enumeration for problem difficulty levels.
@@ -153,3 +154,16 @@ export type CreateProblemInput = z.infer<typeof CreateProblemSchema>;
  * @author Authentication Team
  */
 export type UpdateProblemInput = z.infer<typeof UpdateProblemSchema>;
+
+
+export interface Problem {
+    id: string;
+    slug: string;
+    title: string;
+    difficulty: Difficulty;
+    statement: string;
+    constraints: string;
+    tags: string[];
+    createdAt: Date;
+    updatedAt: Date;
+}

@@ -14,15 +14,6 @@ import {
 } from "lucide-react";
 import { getProblems } from "@/lib/problems/queries";
 
-// // 1. Mock Data: This would eventually come from your database
-// const problems = [
-//   { id: "001", title: "Two Sum", difficulty: "Easy", status: "solved", category: "Arrays", acceptance: "48%" },
-//   { id: "002", title: "Add Two Numbers", difficulty: "Medium", status: "todo", category: "Linked List", acceptance: "32%" },
-//   { id: "003", title: "Median of Two Sorted Arrays", difficulty: "Hard", status: "todo", category: "Binary Search", acceptance: "21%" },
-//   { id: "004", title: "Longest Palindromic Substring", difficulty: "Medium", status: "solved", category: "String", acceptance: "42%" },
-//   { id: "005", title: "Valid Parentheses", difficulty: "Easy", status: "todo", category: "Stack", acceptance: "89%" },
-//   { id: "006", title: "Merge k Sorted Lists", difficulty: "Hard", status: "todo", category: "Heap", acceptance: "28%" },
-// ];
 
 export default async function ProblemsDashboard() {
   const problems = await getProblems();

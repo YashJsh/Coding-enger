@@ -14,15 +14,16 @@ datasource db {
 }
 
 model User {
-  id            String    @id
+  id            String       @id
   name          String
   email         String
-  emailVerified Boolean   @default(false)
+  emailVerified Boolean      @default(false)
   image         String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   sessions      Session[]
   accounts      Account[]
+  submissions   Submission[]
 
   @@unique([email])
   @@map("user")
@@ -77,31 +78,32 @@ model Verification {
 }
 
 model Problem {
-  id          String     @id @default(cuid())
+  id          String       @id @default(cuid())
   title       String
-  slug        String     @unique
+  slug        String       @unique
   difficulty  Difficulty
   statement   String
   constraints String
   tags        String[]
   testCases   TestCase[]
   submission  Submission[]
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
 
   @@index([difficulty])
 }
 
 model TestCase {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   problemId String
   input     String
   output    String
   isSample  Boolean @default(false)
 
-  problem   Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
+
   @@index([problemId])
 }
 
@@ -112,21 +114,21 @@ enum Difficulty {
 }
 
 model Submission {
-  id         String   @id @default(cuid())
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  userId     String   // from Better Auth
-  problemId  String
+  problemId String
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
-  code       String
-  language   Language
-  status     SubmissionStatus
+  code     String
+  language Language
+  status   SubmissionStatus
 
-  runtimeMs  Int?
-  memoryKb   Int?
+  runtimeMs Int?
+  memoryKb  Int?
 
-  problem    Problem  @relation(fields: [problemId], references: [id], onDelete: Cascade)
-
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, problemId])
   @@index([problemId])
@@ -137,8 +139,10 @@ enum SubmissionStatus {
   WRONG_ANSWER
   TIME_LIMIT
   RUNTIME_ERROR
+  PENDING
 }
 
 enum Language {
   JAVASCRIPT
+  PYTHON
 }
