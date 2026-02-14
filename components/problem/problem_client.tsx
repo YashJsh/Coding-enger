@@ -12,20 +12,26 @@ import {
     Maximize2,
     PanelBottom,
     CheckCircle2,
-    Code2
+    Code2,
+    XCircle,
+    Clock,
+    Loader2
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Editor from "@monaco-editor/react";
-import { useTheme } from "next-themes"; // 1. Import useTheme hook
+import { useTheme } from "next-themes";
 import { SpecificProblem } from "@/components/problem/problem";
 import { Problem } from "@/lib/validations/problem";
-import { submitCode } from "@/lib/problems/queries";
+import { submitCode, getSubmissionStatus, SubmissionStatus } from "@/lib/problems/queries";
 
 export const ProblemClient = ({ problem }: { problem: Problem }) => {
     const [activeTab, setActiveTab] = useState("description");
     const [consoleOpen, setConsoleOpen] = useState(false);
     const [language, setLanguage] = useState("javascript");
     const [code, setCode] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [submissionResult, setSubmissionResult] = useState<SubmissionStatus | null>(null);
+    const [error, setError] = useState<string | null>(null);
 
     const { theme, resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -38,8 +44,68 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
     if (!mounted) return null;
 
     const handleSubmit = async () => {
-        const result = await submitCode(code, problem.slug, language as "javascript" | "python");
-        console.log("Submission result:", result);
+        if (!code.trim()) {
+            setError("Code cannot be empty");
+            return;
+        }
+
+        setError(null);
+        setIsSubmitting(true);
+        setSubmissionResult(null);
+
+        try {
+            const result = await submitCode(code, problem.slug, language as "javascript" | "python");
+            console.log("Submission result:", result);
+
+            const pollStatus = async () => {
+                let status: SubmissionStatus;
+                let attempts = 0;
+                const maxAttempts = 20;
+
+                do {
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                    status = await getSubmissionStatus(result.submissionId);
+                    attempts++;
+                } while (status.status === "PENDING" && attempts < maxAttempts);
+
+                setSubmissionResult(status);
+                setConsoleOpen(true);
+                setIsSubmitting(false);
+            };
+
+            pollStatus();
+        } catch (err: any) {
+            setError(err.message || "Failed to submit code");
+            setIsSubmitting(false);
+        }
+    };
+
+    const getStatusIcon = (status: string) => {
+        switch (status) {
+            case "ACCEPTED":
+                return <CheckCircle2 className="h-4 w-4 text-emerald-500" />;
+            case "TIME_LIMIT":
+                return <Clock className="h-4 w-4 text-yellow-500" />;
+            case "RUNTIME_ERROR":
+                return <XCircle className="h-4 w-4 text-red-500" />;
+            default:
+                return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
+        }
+    };
+
+    const getStatusText = (status: string) => {
+        switch (status) {
+            case "ACCEPTED":
+                return "Accepted";
+            case "TIME_LIMIT":
+                return "Time Limit Exceeded";
+            case "RUNTIME_ERROR":
+                return "Runtime Error";
+            case "PENDING":
+                return "Processing...";
+            default:
+                return status;
+        }
     };
 
     return (
@@ -125,32 +191,60 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
                             <Button
                                 className="bg-blue-600 hover:bg-blue-700 text-white"
                                 onClick={handleSubmit}
+                                disabled={isSubmitting}
                             >
-                                <Send className="h-4 w-4 mr-2" />
-                                Submit
+                                {isSubmitting ? (
+                                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                                ) : (
+                                    <Send className="h-4 w-4 mr-2" />
+                                )}
+                                {isSubmitting ? "Submitting..." : "Submit"}
                             </Button>
                         </div>
                     </div>
 
                     {/* Console Drawer */}
-                    {consoleOpen && (
+                    {(consoleOpen || submissionResult) && (
                         <div className="h-48 border-t border-border/40 bg-muted/30 backdrop-blur animate-in slide-in-from-bottom-10 flex flex-col z-20 absolute bottom-0 w-full">
                             <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border/40">
                                 <span className="text-xs font-medium text-muted-foreground">Test Results</span>
-                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setConsoleOpen(false)}>
+                                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setConsoleOpen(false); setSubmissionResult(null); }}>
                                     <Maximize2 className="h-3 w-3" />
                                 </Button>
                             </div>
-                            <div className="p-4 font-mono text-xs">
-                                <div className="flex items-center gap-2 mb-2 text-emerald-500">
-                                    <CheckCircle2 className="h-4 w-4" />
-                                    <span>Accepted</span>
-                                </div>
-                                <div className="bg-background p-3 rounded border border-border/50">
-                                    <span className="text-muted-foreground select-none mr-3">Input:</span> nums = [2,7,11,15], target = 9 <br />
-                                    <span className="text-muted-foreground select-none mr-3">Output:</span> [0,1] <br />
-                                    <span className="text-muted-foreground select-none mr-3">Expected:</span> [0,1]
-                                </div>
+                            <div className="p-4 font-mono text-xs flex-1 overflow-auto">
+                                {error && (
+                                    <div className="flex items-center gap-2 mb-2 text-red-500">
+                                        <XCircle className="h-4 w-4" />
+                                        <span>{error}</span>
+                                    </div>
+                                )}
+                                {submissionResult && (
+                                    <>
+                                        <div className="flex items-center gap-2 mb-2">
+                                            {getStatusIcon(submissionResult.status)}
+                                            <span className={
+                                                submissionResult.status === "ACCEPTED" ? "text-emerald-500" :
+                                                submissionResult.status === "TIME_LIMIT" ? "text-yellow-500" :
+                                                "text-red-500"
+                                            }>
+                                                {getStatusText(submissionResult.status)}
+                                            </span>
+                                        </div>
+                                        {submissionResult.output && (
+                                            <div className="bg-background p-3 rounded border border-border/50 whitespace-pre-wrap">
+                                                <span className="text-muted-foreground select-none mr-3">Output:</span>
+                                                {submissionResult.output}
+                                            </div>
+                                        )}
+                                    </>
+                                )}
+                                {!submissionResult && !error && (
+                                    <div className="flex items-center gap-2 text-muted-foreground">
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        <span>Waiting for results...</span>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     )}
