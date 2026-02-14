@@ -25,6 +25,7 @@ export async function GET(
                 id: true,
                 status: true,
                 output: true,
+                testResults: true,
                 language: true,
                 createdAt: true,
             }

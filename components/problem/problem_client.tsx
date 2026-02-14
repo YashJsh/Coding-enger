@@ -22,7 +22,7 @@ import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 import { SpecificProblem } from "@/components/problem/problem";
 import { Problem } from "@/lib/validations/problem";
-import { submitCode, getSubmissionStatus, SubmissionStatus } from "@/lib/problems/queries";
+import { submitCode, getSubmissionStatus, SubmissionStatus, TestResults } from "@/lib/problems/api";
 
 export const ProblemClient = ({ problem }: { problem: Problem }) => {
     const [activeTab, setActiveTab] = useState("description");
@@ -74,6 +74,7 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
             };
 
             pollStatus();
+            
         } catch (err: any) {
             setError(err.message || "Failed to submit code");
             setIsSubmitting(false);
@@ -87,6 +88,7 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
             case "TIME_LIMIT":
                 return <Clock className="h-4 w-4 text-yellow-500" />;
             case "RUNTIME_ERROR":
+            case "WRONG_ANSWER":
                 return <XCircle className="h-4 w-4 text-red-500" />;
             default:
                 return <Loader2 className="h-4 w-4 text-blue-500 animate-spin" />;
@@ -101,6 +103,8 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
                 return "Time Limit Exceeded";
             case "RUNTIME_ERROR":
                 return "Runtime Error";
+            case "WRONG_ANSWER":
+                return "Wrong Answer";
             case "PENDING":
                 return "Processing...";
             default:
@@ -205,7 +209,7 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
 
                     {/* Console Drawer */}
                     {(consoleOpen || submissionResult) && (
-                        <div className="h-48 border-t border-border/40 bg-muted/30 backdrop-blur animate-in slide-in-from-bottom-10 flex flex-col z-20 absolute bottom-0 w-full">
+                        <div className="h-64 border-t border-border/40 bg-muted/30 backdrop-blur animate-in slide-in-from-bottom-10 flex flex-col z-20 absolute bottom-0 w-full">
                             <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border/40">
                                 <span className="text-xs font-medium text-muted-foreground">Test Results</span>
                                 <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { setConsoleOpen(false); setSubmissionResult(null); }}>
@@ -221,7 +225,7 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
                                 )}
                                 {submissionResult && (
                                     <>
-                                        <div className="flex items-center gap-2 mb-2">
+                                        <div className="flex items-center gap-2 mb-3">
                                             {getStatusIcon(submissionResult.status)}
                                             <span className={
                                                 submissionResult.status === "ACCEPTED" ? "text-emerald-500" :
@@ -230,11 +234,62 @@ export const ProblemClient = ({ problem }: { problem: Problem }) => {
                                             }>
                                                 {getStatusText(submissionResult.status)}
                                             </span>
+                                            {submissionResult.testResults && (
+                                                <span className="text-muted-foreground ml-2">
+                                                    ({submissionResult.testResults.passed}/{submissionResult.testResults.total} test cases passed)
+                                                </span>
+                                            )}
                                         </div>
-                                        {submissionResult.output && (
-                                            <div className="bg-background p-3 rounded border border-border/50 whitespace-pre-wrap">
-                                                <span className="text-muted-foreground select-none mr-3">Output:</span>
-                                                {submissionResult.output}
+                                        
+                                        {submissionResult.testResults && submissionResult.testResults.results.length > 0 && (
+                                            <div className="space-y-3">
+                                                {submissionResult.testResults.results.map((result, index) => (
+                                                    <div key={index} className={`p-2 rounded border ${
+                                                        result.passed ? "border-emerald-500/30 bg-emerald-500/10" : 
+                                                        result.isSample ? "border-red-500/30 bg-red-500/10" : 
+                                                        "border-yellow-500/30 bg-yellow-500/10"
+                                                    }`}>
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            {result.passed ? (
+                                                                <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                                            ) : (
+                                                                <XCircle className={`h-3 w-3 ${result.isSample ? "text-red-500" : "text-yellow-500"}`} />
+                                                            )}
+                                                            <span className={`text-xs ${
+                                                                result.passed ? "text-emerald-500" :
+                                                                result.isSample ? "text-red-500" : 
+                                                                "text-yellow-500"
+                                                            }`}>
+                                                                Test Case {index + 1} {result.isSample && "(Sample)"}
+                                                            </span>
+                                                        </div>
+                                                        
+                                                        {result.error ? (
+                                                            <div className="text-red-400 text-xs mt-1">
+                                                                {result.error}
+                                                            </div>
+                                                        ) : result.isSample ? (
+                                                            <>
+                                                                <div className="text-muted-foreground">
+                                                                    <span className="select-none">Input: </span>
+                                                                    {result.input}
+                                                                </div>
+                                                                <div className="text-muted-foreground">
+                                                                    <span className="select-none">Expected: </span>
+                                                                    {result.expectedOutput}
+                                                                </div>
+                                                                <div className={result.passed ? "text-emerald-400" : "text-red-400"}>
+                                                                    <span className="select-none">Output: </span>
+                                                                    {result.actualOutput}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div className="text-muted-foreground text-xs">
+                                                                {result.passed ? "Passed" : "Failed"}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
                                         )}
                                     </>

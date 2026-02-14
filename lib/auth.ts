@@ -5,7 +5,6 @@ import { PrismaClient } from "@/lib/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 import dotenv from "dotenv";
-import { Database } from "lucide-react";
 
 dotenv.config();
 

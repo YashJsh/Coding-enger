@@ -95,11 +95,12 @@ model Problem {
 
 model TestCase {
   id        String  @id @default(cuid())
-  problemId String
+
   input     String
   output    String
   isSample  Boolean @default(false)
 
+  problemId String
   problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
@@ -125,6 +126,7 @@ model Submission {
   language Language
   status   SubmissionStatus
   output   String?
+  testResults Json?
 
   runtimeMs Int?
   memoryKb  Int?
