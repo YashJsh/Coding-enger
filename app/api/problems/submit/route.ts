@@ -1,10 +1,11 @@
 import { auth, prisma } from "@/lib/auth";
 import { submitProblem } from "@/lib/validations/submit";
 import { NextResponse } from "next/server";
+import { submissionQueue } from "@/lib/queue";
 
 export async function POST(request: Request) {
-    const body = request.body;
-    const parsedBody = submitProblem.parse(body);
+    const body = await request.clone().text();
+    const parsedBody = submitProblem.parse(JSON.parse(body));
 
     const session = await auth.api.getSession({
         headers: request.headers
@@ -35,7 +36,7 @@ export async function POST(request: Request) {
         }
     })
 
-    //To-do submit the code to queue;
+    await submissionQueue.add("execute", { submissionId: submission.id });
 
     return NextResponse.json({
         submissionId: submission.id,

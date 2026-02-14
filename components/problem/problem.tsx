@@ -5,7 +5,7 @@ import { ScrollArea } from "../ui/scroll-area"
 import { getProblemBySlug } from "@/lib/problems/queries"
 import { Problem } from "@/lib/generated/prisma/client"
 
-export const SpecificProblem = async ({problem} : {problem : Problem})=>{
+export const SpecificProblem = ({problem} : {problem : Problem})=>{
     return (
         <div className="w-1/2 flex flex-col border-r border-border/40 bg-background/50 backdrop-blur-sm">
             <div className="h-12 flex items-center px-4 border-b border-border/40 gap-4">

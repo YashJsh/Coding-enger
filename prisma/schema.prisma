@@ -124,6 +124,7 @@ model Submission {
   code     String
   language Language
   status   SubmissionStatus
+  output   String?
 
   runtimeMs Int?
   memoryKb  Int?
