@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Loader2 } from "lucide-react"; 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
@@ -23,6 +24,7 @@ type SignUpFormType = z.infer<typeof signUpSchema>;
 
 export const SignUpForm = () => {
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     const form = useForm<SignUpFormType>({
         resolver: zodResolver(signUpSchema),
@@ -41,7 +43,7 @@ export const SignUpForm = () => {
                     name: data.username,
                     email: data.email,
                     password: data.password,
-                    callbackURL: "/dashboard"
+                    callbackURL: "/problems"
                 },
                 {
                     onError: (ctx) => {
@@ -50,6 +52,8 @@ export const SignUpForm = () => {
                     },
                     onSuccess : ()=>{
                         toast.success("Account created successfully!");
+                        router.push("/problems");
+                        router.refresh();
                     }
                 },
             );

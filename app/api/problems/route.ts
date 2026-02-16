@@ -190,16 +190,16 @@ export async function GET() {
  */
 export async function POST(request: Request) {
     try {
-        // const session = await auth.api.getSession({
-        //     headers: request.headers
-        // });
+        const session = await auth.api.getSession({
+            headers: request.headers
+        });
 
-        // if (!session?.user) {
-        //     return Response.json({
-        //         success: false,
-        //         message: "Unauthorized"
-        //     }, { status: 401 });
-        // }
+        if (!session?.user) {
+            return Response.json({
+                success: false,
+                message: "Unauthorized"
+            }, { status: 401 });
+        }
 
         const body = await request.json();
         const validatedData = CreateProblemSchema.parse(body);

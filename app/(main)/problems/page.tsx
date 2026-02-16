@@ -1,3 +1,6 @@
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 import { Navbar } from "@/components/navbar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,6 +13,15 @@ import { AllProblems } from "@/components/problem/problems_all";
 
 
 export default async function ProblemsDashboard() {
+  const headersList = await headers();
+  const session = await auth.api.getSession({
+    headers: headersList
+  });
+  
+  if (!session?.user) {
+    redirect("/signin");
+  }
+
   const problems = await getProblems();
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative selection:bg-primary/10">

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { toast } from "sonner";
 
@@ -22,6 +23,7 @@ type SignInFormType = z.infer<typeof signInSchema>;
 
 export const SignInForm = () => {
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
     const form = useForm<SignInFormType>({
         resolver: zodResolver(signInSchema),
@@ -38,7 +40,7 @@ export const SignInForm = () => {
                 {
                     email: data.email,
                     password: data.password,
-                    callbackURL: "/dashboard"
+                    callbackURL: "/problems"
                 },
                 {
                     onError: (ctx) => {
@@ -52,6 +54,8 @@ export const SignInForm = () => {
                     },
                     onSuccess: () => {
                         toast.success("Signed In successfully!");
+                        router.push("/problems");
+                        router.refresh();
                     }
                 },
             );
