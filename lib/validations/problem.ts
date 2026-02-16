@@ -162,7 +162,6 @@ export interface Problem {
     title: string;
     difficulty: Difficulty;
     statement: string;
-    constraints: string;
     tags: string[];
     createdAt: Date;
     updatedAt: Date;

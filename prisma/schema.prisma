@@ -83,7 +83,6 @@ model Problem {
   slug        String       @unique
   difficulty  Difficulty
   statement   String
-  constraints String
   tags        String[]
   testCases   TestCase[]
   submission  Submission[]
