@@ -2,8 +2,20 @@ import { Navbar } from "@/components/navbar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { SocialAuthButtons } from "./_components/social_auth_buttons";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { auth } from "@/lib/auth";
 
-export default function AuthLayout({ children }: { children: React.ReactNode }) {
+export default async function AuthLayout({ children }: { children: React.ReactNode }) {
+  const headersList = await headers();
+  const session = await auth.api.getSession({
+    headers: headersList
+  });
+  
+  if (session?.user) {
+    redirect("/problems");
+  }
+  
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground relative">
       <Navbar />

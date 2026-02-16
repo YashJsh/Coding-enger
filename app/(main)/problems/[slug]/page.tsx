@@ -6,11 +6,13 @@ export default async function ProblemPage({
 }: {
   params: { slug: string }
 }) {
-  const slug = await params.slug;
+  const {slug} = await params;
+  console.log("Slug is : ", slug);
   const problem = await getProblemBySlug(slug);
+
   if (!problem) {
     return;
   }
-
+  console.log("Problem" , problem);
   return <ProblemClient problem={problem!} />
 }
